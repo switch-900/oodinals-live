@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /build/
+Disallow: /tools/
+Disallow: /build-logs/
+
+Sitemap: https://oodinals.com/sitemap.xml
